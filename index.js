@@ -175,11 +175,11 @@ const proofread_exhibit = (exhibit, href) => {
     const current_name = image.Description;
     const misplaced_name = exhibit.Name;
     if ( !current_name ) {
-      image.Description = misplaced_name;
+      image.Description = misplaced_name || '';
     }
     image.Path = (
       new URL(image.Path, href)
-    ).href;
+    ).href.replace(/\/+$/,'');
     images[0] = image;
     return {
       ...exhibit, Images: images 
@@ -204,6 +204,31 @@ async function createDir(path) {
   fs.mkdirSync(path, { recursive: true });
 }
 
+const create_json_subdir = (
+  out_json_dir, minerva_nominal_version,
+  collection, story
+) => {
+  if (minerva_nominal_version == 'minerva-1-0') {
+    const out_json_subdir = path.join(
+      out_json_dir, `config-${collection}`
+    );
+    createDir(out_json_subdir);
+    return path.join(
+      out_json_subdir, `${story}.json`
+    )
+  }
+  else if (minerva_nominal_version == 'minerva-1-5') {
+    const out_json_subdir = path.join(
+      out_json_dir, `config-${collection}`, story
+    );
+    createDir(out_json_subdir);
+    return path.join(
+      out_json_subdir, 'exhibit.json'
+    )
+  }
+  assert.ok(false, `unsupported: ${minerva_nominal_version}`)
+}
+
 read_stories('urls.txt').then((stories) => {
   const collections = group_collections(stories);
   Object.entries(collections).forEach(([k, v]) => {
@@ -222,13 +247,13 @@ read_stories('urls.txt').then((stories) => {
     createDir(out_yaml_subdir);
     Object.entries(stories).forEach((item_j) => {
       const [ story, exhibit ] = item_j;
-      const out_json_subdir = path.join(
-        out_json_dir, `config-${collection}`, story
-      );
-      createDir(out_json_subdir);
-      const out_json_path = path.join(
-        out_json_subdir, 'exhibit.json'
-      );
+      const minerva_nominal_version = 'minerva-' + (
+        ('Channels' in exhibit) ? '1-5' : '1-0'
+      )
+      const out_json_path = create_json_subdir(
+        out_json_dir, minerva_nominal_version,
+        collection, story
+      )
       const out_yaml_path = path.join(
         out_yaml_subdir, `${story}.md`
       );
@@ -240,21 +265,19 @@ read_stories('urls.txt').then((stories) => {
       assert.ok(!!image?.Path, 'missing image path');
       const image_path = image.Path ? `
 image: ${image.Path}` : '';
-      const out_yaml = [
-`---
-title: ${name}${image_path}
+      const out_yaml = {
+'minerva-1-0': `---
+title: "${name}${image_path}"
 layout: osd-exhibit
 paper: config-${collection}
 figure: ${story}
 ---`,
-`---
-title: ${name}${image_path}
+'minerva-1-5': `---
+title: "${name}${image_path}"
 layout: minerva-1-5 
 exhibit: config-${collection}/${story}
 ---`
-      ][+(
-        'Channels' in exhibit
-      )]
+      }[minerva_nominal_version];
       console.log(out_yaml);
       const out_json = JSON.stringify(exhibit);
       fs.writeFileSync(out_json_path, out_json);
