@@ -1,0 +1,21 @@
+{
+  "name": "minerva-reformat-exhibits",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "abstract-syntax-tree": "^2.22.0",
+    "rehype-concat-javascript": "^4.0.0",
+    "rehype-parse": "^9.0.0",
+    "rehype-preset-minify": "^7.0.0",
+    "rehype-stringify": "^10.0.0",
+    "unified": "^11.0.4"
+  }
+}
