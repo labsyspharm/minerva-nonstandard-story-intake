@@ -193,7 +193,10 @@ const group_collections = (stories) => {
       !(story.name in collection),
       `duplicate story name: ${story.name}`
     );
-    collection[story.name] = story.exhibit;
+    collection[story.name] = {
+      exhibit: story.exhibit,
+      href: story.href
+    };
     obj[story.collection] = collection;
     return obj;
   },{});
@@ -230,11 +233,11 @@ const create_json_subdir = (
 }
 
 read_stories('urls.txt').then((stories) => {
+  const domain = 'https://www.cycif.org';
   const collections = group_collections(stories);
   Object.entries(collections).forEach(([k, v]) => {
     //console.log(`${k}: `, Object.keys(v).join(','), '\n');
   });
-  console.log('Generating output _data and data');
   const __filename = fileURLToPath(import.meta.url);
   const __dirname = path.dirname(__filename);
   const out_json_dir = path.join(__dirname, '_data');
@@ -246,7 +249,8 @@ read_stories('urls.txt').then((stories) => {
     );
     createDir(out_yaml_subdir);
     Object.entries(stories).forEach((item_j) => {
-      const [ story, exhibit ] = item_j;
+      const [ story, story_details ] = item_j;
+      const { exhibit, href } = story_details;
       const minerva_nominal_version = 'minerva-' + (
         ('Channels' in exhibit) ? '1-5' : '1-0'
       )
@@ -278,7 +282,8 @@ layout: minerva-1-5
 exhibit: config-${collection}/${story}
 ---`
       }[minerva_nominal_version];
-      console.log(out_yaml);
+      console.log(`${href},${domain}/${collection}/${story}`)
+//      console.log(out_yaml);
       const out_json = JSON.stringify(exhibit);
       fs.writeFileSync(out_json_path, out_json);
       fs.writeFileSync(out_yaml_path, out_yaml);
