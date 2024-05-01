@@ -233,7 +233,7 @@ const create_json_subdir = (
 }
 
 read_stories('urls.txt').then((stories) => {
-  const domain = 'https://www.cycif.org';
+  const domain = 'https://www.cycif.org/data';
   const collections = group_collections(stories);
   Object.entries(collections).forEach(([k, v]) => {
     //console.log(`${k}: `, Object.keys(v).join(','), '\n');
